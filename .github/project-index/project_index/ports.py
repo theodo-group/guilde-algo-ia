@@ -33,7 +33,7 @@ class RepoFiles(Protocol):
 
 
 class SiteUnwritable(Exception):
-    """The index site could not be written where it was asked to go."""
+    """The index site could not be built: a library file it copies is missing, or the output folder cannot be written."""
 
 
 class IndexSite(Protocol):

@@ -40,6 +40,16 @@ ANNOTATION_PREFIX = "::error::"  # GitHub Actions error annotation
 
 SITE_TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "site"  # .github/project-index/site/
 SITE_DATA_FILE = "projects.json"
+# npm libraries the page imports, installed by `npm ci` from package-lock.json and updated
+# by Dependabot: site path -> installed file. site/search.js imports ./vendor/fzf/fzf.es.js.
+NODE_MODULES_DIR = SITE_TEMPLATE_DIR.parent / "node_modules"  # .github/project-index/node_modules/
+SITE_LIBRARIES = {
+    "vendor/fzf/fzf.es.js": NODE_MODULES_DIR / "fzf" / "dist" / "fzf.es.js",
+    "vendor/fzf/LICENSE": NODE_MODULES_DIR / "fzf" / "license.txt",
+}
+LIBRARY_INSTALL_HINT = (
+    "run `npm ci` in .github/project-index; if they are installed, the package layout changed: update SITE_LIBRARIES"
+)
 # Written first in every built site, so a rebuild, even after a crash halfway, only ever
 # deletes a folder an earlier build made.
 SITE_MARKER_FILE = ".project-index-site"

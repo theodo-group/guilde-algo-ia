@@ -13,6 +13,7 @@ from project_index.constants import (
     CHECK_COMMAND,
     FORMAT_HINT,
     README_NAME,
+    SITE_LIBRARIES,
     SITE_TEMPLATE_DIR,
     STRUCTURE_COMMAND,
     STRUCTURE_HINT,
@@ -35,8 +36,8 @@ from project_index.steps import (
 
 
 def static_site(out_dir: Path) -> IndexSite:
-    """Build the site adapter that writes the page template and the JSON into a folder."""
-    return StaticSite(SITE_TEMPLATE_DIR, out_dir)
+    """Build the site adapter that writes the page template, its npm libraries and the JSON into a folder."""
+    return StaticSite(SITE_TEMPLATE_DIR, out_dir, libraries=SITE_LIBRARIES)
 
 
 def print_report(report: CheckReport) -> None:
