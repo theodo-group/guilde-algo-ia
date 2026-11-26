@@ -1,7 +1,7 @@
 [project]
 name = "project-index"
 version = "0.1.0"
-description = "Validates the optional metadata block of each project README."
+description = "Validates the optional metadata block of each project README and builds the index site."
 requires-python = ">=3.11"
 dependencies = ["pyyaml>=6"]
 

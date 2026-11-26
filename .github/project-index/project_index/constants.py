@@ -1,5 +1,7 @@
 """Literals shared by the project index: metadata keys, folder layout, messages."""
 
+from pathlib import Path
+
 TITLE_KEY = "titre"
 AUTHORS_KEY = "auteurs"
 DESCRIPTION_KEY = "description"
@@ -26,5 +28,12 @@ BYTE_ORDER_MARK = "\ufeff"
 
 CHECK_COMMAND = "check"
 ANNOTATION_PREFIX = "::error::"  # GitHub Actions error annotation
+
+SITE_TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "site"  # .github/project-index/site/
+SITE_DATA_FILE = "projects.json"
+# Written first in every built site, so a rebuild, even after a crash halfway, only ever
+# deletes a folder an earlier build made.
+SITE_MARKER_FILE = ".project-index-site"
+BUILD_COMMAND = "build"
 
 FORMAT_HINT = "Metadata format: README.md, section Métadonnées."

@@ -1,5 +1,5 @@
 ---
-# Optionnel : ce bloc décrit le projet de façon standard (titre, auteurs, session...).
+# Optionnel : ce bloc décrit le projet et l'ajoute à l'index (https://theodo-group.github.io/guilde-algo-ia/).
 # Supprime-le si tu n'en veux pas. Format : README.md racine, section Métadonnées.
 titre: <Nom du projet>
 auteurs: [<github-login>]

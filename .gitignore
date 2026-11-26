@@ -17,3 +17,6 @@ __pycache__/
 .pytest_cache/
 .metrics/
 .coverage
+
+# Local GitHub Pages build
+_site/

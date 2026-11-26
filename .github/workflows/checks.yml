@@ -14,3 +14,8 @@ jobs:
       - uses: astral-sh/setup-uv@v10.4.0
       - run: uv run --locked --directory .github/project-index python -m project_index check
       - run: uv run --locked --directory .github/project-index pytest -q
+      - run: uv run --locked --directory .github/project-index python -m project_index build --out "$RUNNER_TEMP/site"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node --test .github/project-index/tests/search.test.mjs

@@ -2,14 +2,17 @@
 
 from project_index.metadata import (
     Block,
+    Blocked,
     CheckReport,
     IndexedProject,
     InvalidProject,
     MalformedBlock,
     NoBlock,
     ProjectMetadata,
+    Published,
+    PublishOutcome,
 )
-from project_index.ports import RepoFiles
+from project_index.ports import IndexSite, RepoFiles
 from project_index.rules import project_of_readme, validate_metadata
 
 
@@ -36,3 +39,16 @@ def check_projects(repo: RepoFiles) -> CheckReport:
                 else:
                     report.invalid.append(InvalidProject(project, tuple(outcome)))
     return report
+
+
+def publish_index(repo: RepoFiles, site: IndexSite) -> PublishOutcome:
+    """Check every project, then publish the valid ones as the whole index.
+
+    Nothing is published when a metadata block is invalid: the site keeps its last good
+    version, and the outcome says so.
+    """
+    report = check_projects(repo)
+    if not report.passed:
+        return Blocked(report)
+    site.publish(report.indexed)
+    return Published(report)
