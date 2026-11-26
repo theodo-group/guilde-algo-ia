@@ -19,7 +19,7 @@ while IFS= read -r f; do
 done < <(git ls-files)
 
 # Projects are the tracked folders at depth 3: <theme>/<sujet>/<projet>/
-projects=$(git ls-files | grep -vE '^(\.github|_template)/' | awk -F/ 'NF > 3 { print $1 "/" $2 "/" $3 }' | sort -u)
+projects=$(git ls-files | grep -vE '^(\.claude|\.github|_template)/' | awk -F/ 'NF > 3 { print $1 "/" $2 "/" $3 }' | sort -u)
 for p in $projects; do
   IFS=/ read -r theme sujet projet <<< "$p"
   for part in "$theme" "$sujet" "$projet"; do
@@ -32,7 +32,7 @@ done
 # Files sitting directly in a theme or subject folder, outside any project
 while IFS= read -r f; do
   fail "$f: file outside a project, expected <theme>/<sujet>/<projet>/..."
-done < <(git ls-files | grep -vE '^(\.github|_template)/' | awk -F/ 'NF == 2 || NF == 3')
+done < <(git ls-files | grep -vE '^(\.claude|\.github|_template)/' | awk -F/ 'NF == 2 || NF == 3')
 
 if (( errors > 0 )); then
   echo "$errors problem(s) found. Rules: README.md, section Conventions."
