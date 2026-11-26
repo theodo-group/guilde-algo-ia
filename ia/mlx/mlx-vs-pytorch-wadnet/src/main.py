@@ -16,7 +16,7 @@ def parse_args():
         default="train",
         choices=["train", "generate", "compare", "evaluate"],
     )
-    parser.add_argument("--model", type=str | None, default=None, choices=["mlx", "pytorch"])
+    parser.add_argument("--model", type=str, default=None, choices=["mlx", "pytorch"])
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--learning_rate", type=float, default=1e-3)
