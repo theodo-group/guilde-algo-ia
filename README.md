@@ -35,7 +35,7 @@ ia/
    ```bash
    cp -r _template <theme>/<sujet>/<projet>
    ```
-4. Remplir le `README.md` du projet.
+4. Remplir le `README.md` du projet, avec son bloc de métadonnées (optionnel).
 5. Ajouter sa ligne dans `.github/CODEOWNERS` : `/<theme>/<sujet>/<projet>/ @<github-login>`.
 6. Ouvrir une PR et suivre la checklist du template.
 
@@ -43,7 +43,28 @@ ia/
 
 - **`main` est protégée** : tout passe par une PR, avec une approbation et la CI au vert.
 - **Chaque projet appartient à son auteur** (`.github/CODEOWNERS`) : une PR qui touche le projet de quelqu'un d'autre attend son approbation.
-- **La CI vérifie la structure** : nommage, README présent, ligne CODEOWNERS, aucun `.env` commité, aucun fichier de plus de 10 Mo. Pour la lancer en local : `.github/scripts/check-structure.sh`.
+- **La CI vérifie la structure** : nommage, README présent, ligne CODEOWNERS, aucun `.env` commité, aucun fichier de plus de 10 Mo. Elle valide aussi le bloc de métadonnées quand il est présent. Pour la lancer en local :
+  ```bash
+  .github/scripts/check-structure.sh
+  uv run --directory .github/project-index python -m project_index check
+  ```
+
+## Métadonnées
+
+Optionnel. Un bloc YAML en tête du `README.md` d'un projet le décrit de façon standard. La CI le valide quand il est présent.
+
+```yaml
+---
+titre: KNN sur Iris                         # requis
+auteurs: [jdupont]                          # requis, logins GitHub
+description: Ce que le projet montre.       # requis, une phrase
+date: 2026-01-15                            # optionnel, date de la session
+session: https://app.notion.com/p/...       # optionnel, lien vers la présentation
+stack: [python, scikit-learn]               # optionnel
+---
+```
+
+Le thème, le sujet et le projet sont déduits du chemin du dossier. Les valeurs entre chevrons du template (`<...>`) sont refusées : remplis-les ou supprime le bloc.
 
 ## Développer sur ce repo
 

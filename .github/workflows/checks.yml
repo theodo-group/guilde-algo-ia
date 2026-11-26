@@ -11,3 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: .github/scripts/check-structure.sh
+      - uses: astral-sh/setup-uv@v10.4.0
+      - run: uv run --locked --directory .github/project-index python -m project_index check
+      - run: uv run --locked --directory .github/project-index pytest -q
