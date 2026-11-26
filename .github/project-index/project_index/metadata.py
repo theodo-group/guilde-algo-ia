@@ -126,3 +126,23 @@ class TagSync:
     def complete(self) -> bool:
         """Tell whether every default tag is now on its project's last commit."""
         return not self.failed
+
+
+@dataclass(frozen=True)
+class StructureProblem:
+    """A tracked file or a project folder that breaks the repo standard, and how."""
+
+    path: str
+    problem: str
+
+
+@dataclass
+class StructureReport:
+    """Every breach of the repo standard found, files first, then projects, then stray files."""
+
+    problems: list[StructureProblem] = field(default_factory=list)
+
+    @property
+    def passed(self) -> bool:
+        """Tell whether the repo follows its standard."""
+        return not self.problems

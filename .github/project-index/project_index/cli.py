@@ -1,4 +1,4 @@
-"""Entry point: `python -m project_index check`, `build --out <folder>` or `tags`."""
+"""Entry point: `python -m project_index structure`, `check`, `build --out <folder>` or `tags`."""
 
 import argparse
 import sys
@@ -14,6 +14,8 @@ from project_index.constants import (
     FORMAT_HINT,
     README_NAME,
     SITE_TEMPLATE_DIR,
+    STRUCTURE_COMMAND,
+    STRUCTURE_HINT,
     TAGS_COMMAND,
 )
 from project_index.metadata import Blocked, CheckReport, Published
@@ -24,7 +26,12 @@ from project_index.ports import (
     RepoUnavailable,
     SiteUnwritable,
 )
-from project_index.steps import check_projects, publish_index, sync_project_tags
+from project_index.steps import (
+    check_projects,
+    check_structure,
+    publish_index,
+    sync_project_tags,
+)
 
 
 def static_site(out_dir: Path) -> IndexSite:
@@ -46,9 +53,10 @@ def print_report(report: CheckReport) -> None:
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
-    """Read the command line: `check`, or `build` with its required `--out` folder."""
+    """Read the command line: `structure`, `check`, `build` with its required `--out` folder, or `tags`."""
     parser = argparse.ArgumentParser(prog="project_index")
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser(STRUCTURE_COMMAND, help="check the repo standard: names, README, owner, secrets, sizes")
     commands.add_parser(CHECK_COMMAND, help="validate the metadata blocks")
     build = commands.add_parser(BUILD_COMMAND, help="validate, then write the index site")
     build.add_argument("--out", type=Path, required=True, help="folder to write the site into")
@@ -80,6 +88,18 @@ def run_tags(repo: RepoFiles, tags: ProjectTags) -> int:
     return 0 if sync.complete else 1
 
 
+def run_structure(repo: RepoFiles) -> int:
+    """Check the repo standard and report one GitHub annotation per problem; return the exit code."""
+    report = check_structure(repo)
+    for problem in report.problems:
+        print(f"{ANNOTATION_PREFIX}{problem.path}: {problem.problem}")
+    if not report.passed:
+        print(f"{len(report.problems)} problem(s) found. {STRUCTURE_HINT}")
+        return 1
+    print("Structure OK")
+    return 0
+
+
 def run_check(repo: RepoFiles) -> int:
     """Check the metadata blocks and report them; return the exit code."""
     report = check_projects(repo)
@@ -94,16 +114,18 @@ def main(
     site_factory: Callable[[Path], IndexSite] = static_site,
     tags_factory: Callable[[], ProjectTags] = GitRepo.current,
 ) -> int:
-    """Run the command and return its exit code: 0 when every block is valid, the site (build) is written, or every tag (tags) is in place."""
+    """Run the command and return its exit code: 0 when the repo follows its standard (structure), every block is valid, the site (build) is written, or every tag (tags) is in place."""
     args = parse_args(argv)
     try:
+        if args.command == STRUCTURE_COMMAND:
+            return run_structure(repo_factory())
         if args.command == TAGS_COMMAND:
             return run_tags(repo_factory(), tags_factory())
         if args.command == BUILD_COMMAND:
             return run_build(repo_factory(), site_factory(args.out), out=args.out)
         return run_check(repo_factory())
     except RepoUnavailable as error:
-        print(f"{ANNOTATION_PREFIX}cannot list the repo files: {error}", file=sys.stderr)
+        print(f"{ANNOTATION_PREFIX}cannot read the repo: {error}", file=sys.stderr)
     except SiteUnwritable as error:
         print(f"{ANNOTATION_PREFIX}{error}", file=sys.stderr)
     return 1

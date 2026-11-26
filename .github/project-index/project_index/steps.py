@@ -11,12 +11,22 @@ from project_index.metadata import (
     ProjectMetadata,
     Published,
     PublishOutcome,
+    StructureProblem,
+    StructureReport,
     TagFailure,
     TagMove,
     TagSync,
 )
 from project_index.ports import IndexSite, ProjectTags, RepoFiles, TagsUnwritable
-from project_index.rules import default_tag, project_of_readme, validate_metadata
+from project_index.rules import (
+    default_tag,
+    file_problems,
+    outside_project_problems,
+    project_of_file,
+    project_of_readme,
+    project_problems,
+    validate_metadata,
+)
 
 
 def check_projects(repo: RepoFiles) -> CheckReport:
@@ -41,6 +51,27 @@ def check_projects(repo: RepoFiles) -> CheckReport:
                     report.indexed.append(IndexedProject(project, outcome))
                 else:
                     report.invalid.append(InvalidProject(project, tuple(outcome)))
+    return report
+
+
+def check_structure(repo: RepoFiles) -> StructureReport:
+    """Check the repo standard on every tracked file and every project folder.
+
+    Problems come files first (secrets, size), then projects (names, README, owner), then
+    files that sit outside any project, so the author can fix them all in one go.
+    """
+    files = sorted(repo.tracked_files())
+    report = StructureReport()
+    for file in files:
+        report.problems += [StructureProblem(file, problem) for problem in file_problems(file, size=repo.file_size(file))]
+    projects = sorted(set(filter(None, map(project_of_file, files))), key=str)
+    tracked, owner_paths = frozenset(files), repo.owner_paths()
+    for project in projects:
+        report.problems += [
+            StructureProblem(str(project), problem)
+            for problem in project_problems(project, files=tracked, owner_paths=owner_paths)
+        ]
+    report.problems += [StructureProblem(file, problem) for file in files for problem in outside_project_problems(file)]
     return report
 
 

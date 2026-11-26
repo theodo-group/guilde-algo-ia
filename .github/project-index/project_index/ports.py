@@ -6,7 +6,7 @@ from project_index.metadata import FrontMatter, IndexedProject, ProjectPath
 
 
 class RepoUnavailable(Exception):
-    """The files of the repo could not be listed."""
+    """The repo could not be read: its files could not be listed, or a repo-level file such as CODEOWNERS is unreadable."""
 
 
 class RepoFiles(Protocol):
@@ -18,6 +18,17 @@ class RepoFiles(Protocol):
 
     def front_matter(self, file: str) -> FrontMatter:
         """Return the metadata block at the top of a file; a file that cannot be read gives a MalformedBlock."""
+        ...
+
+    def file_size(self, file: str) -> int | None:
+        """Return the size in bytes of a tracked file, or None when it cannot be read."""
+        ...
+
+    def owner_paths(self) -> frozenset[str]:
+        """Return the paths of the owner lines, without leading and trailing slashes; none when no owner is declared.
+
+        Raises RepoUnavailable when the owners file exists but cannot be read.
+        """
         ...
 
 

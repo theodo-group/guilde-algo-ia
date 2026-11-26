@@ -151,3 +151,27 @@ def test_tagged_commit_peels_an_annotated_tag(repo_with_remote):
     )
     subprocess.run(["git", "push", "-q", "origin", "refs/tags/projet/ia/mlx/a"], cwd=repo, check=True)
     assert GitRepo(repo).tagged_commit("projet/ia/mlx/a") == first
+
+
+def test_file_size_is_the_size_of_the_tracked_file(repo):
+    track(repo, {"ia/mlx/a/data.bin": b"x" * 42})
+    assert GitRepo(repo).file_size("ia/mlx/a/data.bin") == 42
+
+
+def test_file_size_of_a_missing_file_is_none(repo):
+    assert GitRepo(repo).file_size("missing.bin") is None
+
+
+def test_owner_paths_are_the_paths_of_the_codeowners_lines(repo):
+    track(repo, {".github/CODEOWNERS": "# /ia/mlx/commented/ @x\n\n*  @lead\n/ia/mlx/a/   @x\n/ia/mlx/b @y\nia/mlx/c/ @z\n"})
+    assert GitRepo(repo).owner_paths() == frozenset({"*", "ia/mlx/a", "ia/mlx/b", "ia/mlx/c"})
+
+
+def test_unreadable_codeowners_is_unavailable(repo):
+    track(repo, {".github/CODEOWNERS": b"/ia/mlx/caf\xe9/ @x\n"})
+    with pytest.raises(RepoUnavailable, match="cannot read .github/CODEOWNERS"):
+        GitRepo(repo).owner_paths()
+
+
+def test_no_codeowners_means_no_owner_path(repo):
+    assert GitRepo(repo).owner_paths() == frozenset()
