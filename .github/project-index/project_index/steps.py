@@ -11,9 +11,12 @@ from project_index.metadata import (
     ProjectMetadata,
     Published,
     PublishOutcome,
+    TagFailure,
+    TagMove,
+    TagSync,
 )
-from project_index.ports import IndexSite, RepoFiles
-from project_index.rules import project_of_readme, validate_metadata
+from project_index.ports import IndexSite, ProjectTags, RepoFiles, TagsUnwritable
+from project_index.rules import default_tag, project_of_readme, validate_metadata
 
 
 def check_projects(repo: RepoFiles) -> CheckReport:
@@ -52,3 +55,27 @@ def publish_index(repo: RepoFiles, site: IndexSite) -> PublishOutcome:
         return Blocked(report)
     site.publish(report.indexed)
     return Published(report)
+
+
+def sync_project_tags(repo: RepoFiles, tags: ProjectTags) -> TagSync:
+    """Point each project's default tag at the last commit that touches its folder.
+
+    A tag already on that commit is left alone, so a rerun changes nothing. A tag that
+    cannot be moved is recorded with its reason and the other projects still go through,
+    so the outcome names a partial sync.
+    """
+    sync = TagSync()
+    projects = sorted(filter(None, map(project_of_readme, repo.tracked_files())), key=str)
+    for project in projects:
+        tag = default_tag(project)
+        try:
+            commit = tags.last_commit(project)
+            if tags.tagged_commit(tag) == commit:
+                sync.up_to_date.append(tag)
+                continue
+            tags.move_tag(tag, commit)
+        except TagsUnwritable as error:
+            sync.failed.append(TagFailure(tag, str(error)))
+            continue
+        sync.moved.append(TagMove(tag, commit))
+    return sync

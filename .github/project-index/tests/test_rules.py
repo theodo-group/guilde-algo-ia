@@ -6,7 +6,7 @@ import pytest
 
 from project_index.constants import NON_PROJECT_DIRS
 from project_index.metadata import ProjectMetadata, ProjectPath
-from project_index.rules import project_of_readme, validate_metadata
+from project_index.rules import default_tag, project_of_readme, validate_metadata
 
 VALID = {
     "titre": "MLX vs PyTorch",
@@ -84,3 +84,7 @@ def test_non_project_dirs_match_check_structure_script():
     script = (Path(__file__).parents[2] / "scripts" / "check-structure.sh").read_text()
     pattern = re.search(r"grep -vE '\^\(([^)]*)\)/'", script).group(1)
     assert {name.replace("\\", "") for name in pattern.split("|")} == NON_PROJECT_DIRS
+
+
+def test_default_tag():
+    assert default_tag(ProjectPath("ia", "mlx", "mlx-vs-pytorch")) == "projet/ia/mlx/mlx-vs-pytorch"

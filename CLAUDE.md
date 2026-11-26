@@ -10,6 +10,7 @@ Monorepo of independent projects by guild members, laid out as `<theme>/<sujet>/
 - New environment variable → add it to the project's `.env.example`, name only, no value. Real values stay in `.env`.
 - The README metadata block is optional; when present it follows `README.md`, section Métadonnées, and adds the project to the GitHub Pages index.
 - Before a PR, `.github/scripts/check-structure.sh` and `uv run --directory .github/project-index python -m project_index check` pass (the CI runs both).
+- Each project has a default tag `projet/<theme>/<sujet>/<projet>` that the `project-tags` workflow moves to its last commit on every push to `main`; leave it to the CI. Extra fixed tags use `projet/<theme>/<sujet>/<projet>@<label>` (format: `README.md`, section Tags).
 - Data goes in `data/`, which git ignores; the project's README says how to get it.
 
 ## Repo-level files

@@ -52,6 +52,22 @@ ia/
   uv run --directory .github/project-index python -m project_index check
   ```
 
+## Tags
+
+Chaque projet a un tag `projet/<theme>/<sujet>/<projet>`, posé par la CI à chaque merge sur `main` sur le dernier commit de `main` qui touche son dossier. Ce tag appartient à la CI : s'il est déplacé à la main, il est remis en place au merge suivant. Il sert à retrouver le projet rapidement :
+
+```bash
+git fetch --tags --force
+git checkout projet/ia/mlx/mlx-vs-pytorch-wadnet
+```
+
+Pour marquer un état précis (une session, une version), ajoute un tag fixe avec `@<label>` : `projet/<theme>/<sujet>/<projet>@<label>`, par exemple `projet/ia/mlx/mlx-vs-pytorch-wadnet@session-2026-03-11`. Git ne peut pas avoir à la fois `a/b` et `a/b/c`, d'où le `@`.
+
+```bash
+git tag projet/ia/mlx/mlx-vs-pytorch-wadnet@session-2026-03-11 <commit>
+git push origin projet/ia/mlx/mlx-vs-pytorch-wadnet@session-2026-03-11
+```
+
 ## Métadonnées
 
 Optionnel. Un bloc YAML en tête du `README.md` d'un projet le décrit de façon standard et l'ajoute à l'[index](https://theodo-group.github.io/guilde-algo-ia/). La CI le valide quand il est présent. Sans ce bloc, le projet reste dans le repo mais n'apparaît pas dans l'index.

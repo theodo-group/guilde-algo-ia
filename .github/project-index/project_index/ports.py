@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from project_index.metadata import FrontMatter, IndexedProject
+from project_index.metadata import FrontMatter, IndexedProject, ProjectPath
 
 
 class RepoUnavailable(Exception):
@@ -30,4 +30,24 @@ class IndexSite(Protocol):
 
     def publish(self, projects: list[IndexedProject]) -> None:
         """Publish the given projects as the whole index. Raises SiteUnwritable."""
+        ...
+
+
+class TagsUnwritable(Exception):
+    """A project tag could not be read, moved or shared."""
+
+
+class ProjectTags(Protocol):
+    """The default tags that mark the last change of each project."""
+
+    def last_commit(self, project: ProjectPath) -> str:
+        """Return the last commit that touches the project folder. Raises TagsUnwritable."""
+        ...
+
+    def tagged_commit(self, tag: str) -> str | None:
+        """Return the commit a tag points to, or None when the tag does not exist. Raises TagsUnwritable."""
+        ...
+
+    def move_tag(self, tag: str, commit: str) -> None:
+        """Point the tag at the commit and share it. Raises TagsUnwritable."""
         ...

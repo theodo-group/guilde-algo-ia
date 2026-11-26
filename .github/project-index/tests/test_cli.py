@@ -2,7 +2,7 @@ import pytest
 
 from project_index.cli import main
 from project_index.metadata import Block, MalformedBlock, NoBlock
-from tests.fakes import BrokenRepo, BrokenSite, FakeRepo, FakeSite
+from tests.fakes import BrokenRepo, BrokenSite, BrokenTags, FakeRepo, FakeSite, FakeTags
 
 VALID = Block({"titre": "T", "auteurs": ["a"], "description": "D"})
 
@@ -72,3 +72,21 @@ def test_unwritable_site_fails(capsys):
     code, out = build(capsys, FakeRepo({"ia/mlx/ok/README.md": VALID}), BrokenSite())
     assert code == 1
     assert out.err.strip() == "::error::cannot write the site to out: denied"
+
+
+def test_tags_reports_each_move(capsys):
+    repo = FakeRepo({"ia/mlx/a/README.md": NoBlock(), "ia/mlx/b/README.md": NoBlock()})
+    tags = FakeTags({"ia/mlx/a": "1111111aaa", "ia/mlx/b": "2222222bbb"}, {"projet/ia/mlx/a": "1111111aaa"})
+    code = main(["tags"], repo_factory=lambda: repo, tags_factory=lambda: tags)
+    assert code == 0
+    assert capsys.readouterr().out.splitlines() == ["projet/ia/mlx/b -> 2222222", "1 tag(s) moved, 1 already up to date, 0 failed"]
+
+
+def test_tags_fails_when_a_tag_cannot_be_pushed(capsys):
+    repo = FakeRepo({"ia/mlx/a/README.md": NoBlock()})
+    code = main(["tags"], repo_factory=lambda: repo, tags_factory=lambda: BrokenTags({"ia/mlx/a": "c1"}, {"projet/ia/mlx/a"}))
+    assert code == 1
+    assert capsys.readouterr().out.splitlines() == [
+        "::error::projet/ia/mlx/a: remote rejected",
+        "0 tag(s) moved, 0 already up to date, 1 failed",
+    ]

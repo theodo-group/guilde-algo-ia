@@ -96,3 +96,33 @@ class Blocked:
 
 
 PublishOutcome = Published | Blocked
+
+
+@dataclass(frozen=True)
+class TagMove:
+    """A project's default tag, moved to the given commit."""
+
+    tag: str
+    commit: str
+
+
+@dataclass(frozen=True)
+class TagFailure:
+    """A default tag that could not be moved, and why."""
+
+    tag: str
+    reason: str
+
+
+@dataclass
+class TagSync:
+    """What the tag sync did: the tags it moved, the tags already in place, the tags it could not move."""
+
+    moved: list[TagMove] = field(default_factory=list)
+    up_to_date: list[str] = field(default_factory=list)
+    failed: list[TagFailure] = field(default_factory=list)
+
+    @property
+    def complete(self) -> bool:
+        """Tell whether every default tag is now on its project's last commit."""
+        return not self.failed
