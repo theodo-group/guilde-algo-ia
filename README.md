@@ -89,6 +89,13 @@ Le thème, le sujet et le projet sont déduits du chemin du dossier. L'index est
 
 Pour le code du repo (`.github/`) ou d'un projet qui le souhaite, une bonne pratique est disponible : le skill Claude Code [`ub-mode`](.claude/skills/ub-mode/SKILL.md) et ses [règles d'architecture](.claude/skills/ub-mode/architecture.md). Ce n'est pas une règle : aucune CI ne les vérifie. Un projet qui les suit le dit dans son README.
 
+La recherche de l'index utilise la bibliothèque [fzf](https://www.npmjs.com/package/fzf), une dépendance npm de `.github/project-index/` (version figée dans `package-lock.json`, mise à jour par Dependabot). Le build la copie dans le site. Pour construire l'index en local :
+
+```bash
+npm ci --prefix .github/project-index
+uv run --directory .github/project-index python -m project_index build --out "$PWD/_site"  # site written to ./_site
+```
+
 ## Conventions
 
 - **Noms de dossiers** : minuscules, kebab-case, sans accent (`dijkstra-astar`, `sdk-anthropic`).
