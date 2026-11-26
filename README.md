@@ -2,6 +2,9 @@
 
 Les projets des membres de la guilde, rangés par thème puis par sujet.
 
+- **Index des projets, avec recherche** : https://theodo-group.github.io/guilde-algo-ia/
+- **Page Notion de la guilde** : [Guilde Algo IA](https://app.notion.com/p/m33/Guilde-Algo-IA-1f1744af43ed4491948aa59646624eba)
+
 ## Structure
 
 ```
@@ -35,7 +38,7 @@ ia/
    ```bash
    cp -r _template <theme>/<sujet>/<projet>
    ```
-4. Remplir le `README.md` du projet.
+4. Remplir le `README.md` du projet, avec son bloc de métadonnées pour apparaître dans l'index (optionnel).
 5. Ajouter sa ligne dans `.github/CODEOWNERS` : `/<theme>/<sujet>/<projet>/ @<github-login>`.
 6. Ouvrir une PR et suivre la checklist du template.
 
@@ -43,7 +46,11 @@ ia/
 
 - **`main` est protégée** : tout passe par une PR, avec une approbation et la CI au vert.
 - **Chaque projet appartient à son auteur** (`.github/CODEOWNERS`) : une PR qui touche le projet de quelqu'un d'autre attend son approbation.
-- **La CI vérifie la structure** : nommage, README présent, ligne CODEOWNERS, aucun `.env` commité, aucun fichier de plus de 10 Mo. Pour la lancer en local : `.github/scripts/check-structure.sh`.
+- **La CI vérifie la structure** : nommage, README présent, ligne CODEOWNERS, aucun `.env` commité, aucun fichier de plus de 10 Mo. Elle valide aussi le bloc de métadonnées quand il est présent. Pour la lancer en local :
+  ```bash
+  .github/scripts/check-structure.sh
+  uv run .github/scripts/build_index.py --check
+  ```
 
 ## Conventions
 
@@ -52,6 +59,23 @@ ia/
 - **Un projet est autonome** : ses dépendances, sa config et son `.gitignore` vivent dans son dossier. Rien n'est partagé entre projets.
 - **Secrets** : uniquement dans `.env` (ignoré par git). Lister les variables nécessaires dans `.env.example`, sans valeur.
 - **Données** : dans `data/`, non versionnées. Le README du projet explique comment les obtenir.
+
+## Métadonnées
+
+Optionnel. Un bloc YAML en tête du `README.md` d'un projet l'ajoute à l'[index](https://theodo-group.github.io/guilde-algo-ia/). Sans ce bloc, le projet reste dans le repo mais n'apparaît pas dans l'index.
+
+```yaml
+---
+titre: MLX vs PyTorch                       # requis
+auteurs: [Vlor999]                          # requis, logins GitHub
+description: Ce que le projet montre.       # requis, une phrase
+date: 2026-03-12                            # optionnel, date de la session
+session: https://app.notion.com/p/...       # optionnel, lien vers la présentation
+stack: [python, mlx]                        # optionnel
+---
+```
+
+Le thème, le sujet et le projet sont déduits du chemin du dossier. L'index est reconstruit à chaque merge sur `main`.
 
 ## Licence
 

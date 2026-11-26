@@ -7,3 +7,6 @@
 .DS_Store
 .idea/
 .vscode/
+
+# Local GitHub Pages build
+_site/

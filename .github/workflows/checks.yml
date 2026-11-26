@@ -11,3 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: .github/scripts/check-structure.sh
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run .github/scripts/build_index.py --check

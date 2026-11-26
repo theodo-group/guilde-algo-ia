@@ -1,3 +1,11 @@
+---
+titre: MLX vs PyTorch
+auteurs: [Vlor999]
+description: Comparaison des pipelines d'entraînement et d'inférence MLX et PyTorch sur Apple Silicon.
+session: https://app.notion.com/p/m33/MLX-et-MLX-LM-framework-pr-sentation-3108f3776f4f8067a5b9cb5a2722205e
+stack: [python, mlx, mlx-lm, pytorch, transformers]
+---
+
 
 # MLX vs PyTorch
 

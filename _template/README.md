@@ -1,3 +1,14 @@
+---
+# Optionnel : ce bloc ajoute le projet à l'index (https://theodo-group.github.io/guilde-algo-ia/).
+# Supprime-le si tu ne veux pas être indexé. Format : README.md racine, section Métadonnées.
+titre: <Nom du projet>
+auteurs: [<github-login>]
+description: <Ce que le projet montre, en une phrase.>
+date: 2026-01-31            # date de la session de guilde
+session: https://<lien vers la présentation>
+stack: [python]
+---
+
 # <Nom du projet>
 
 **Auteur·ice :** <prénom nom>
