@@ -45,6 +45,10 @@ ia/
 - **Chaque projet appartient à son auteur** (`.github/CODEOWNERS`) : une PR qui touche le projet de quelqu'un d'autre attend son approbation.
 - **La CI vérifie la structure** : nommage, README présent, ligne CODEOWNERS, aucun `.env` commité, aucun fichier de plus de 10 Mo. Pour la lancer en local : `.github/scripts/check-structure.sh`.
 
+## Développer sur ce repo
+
+Pour le code du repo (`.github/`) ou d'un projet qui le souhaite, une bonne pratique est disponible : le skill Claude Code [`ub-mode`](.claude/skills/ub-mode/SKILL.md) et ses [règles d'architecture](.claude/skills/ub-mode/architecture.md). Ce n'est pas une règle : aucune CI ne les vérifie. Un projet qui les suit le dit dans son README.
+
 ## Conventions
 
 - **Noms de dossiers** : minuscules, kebab-case, sans accent (`dijkstra-astar`, `sdk-anthropic`).
