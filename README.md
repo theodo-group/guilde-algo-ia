@@ -52,3 +52,7 @@ ia/
 - **Un projet est autonome** : ses dépendances, sa config et son `.gitignore` vivent dans son dossier. Rien n'est partagé entre projets.
 - **Secrets** : uniquement dans `.env` (ignoré par git). Lister les variables nécessaires dans `.env.example`, sans valeur.
 - **Données** : dans `data/`, non versionnées. Le README du projet explique comment les obtenir.
+
+## Licence
+
+Par défaut, tout le repo est sous [licence MIT](LICENSE). Si tu ne veux pas de la MIT pour ton projet, ajoute ton propre fichier `LICENSE` à la racine de ton dossier projet : il remplace la licence générale pour ce dossier.
