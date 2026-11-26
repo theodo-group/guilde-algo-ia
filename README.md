@@ -29,7 +29,7 @@ ia/
 
 ## Ajouter un projet
 
-1. Créer une branche depuis `main` (pas de fork : les membres de la guilde ont accès en écriture).
+1. Créer une branche depuis `main` (pas de fork : tout `theodo-group` a accès en écriture).
 2. Choisir le thème et le sujet. Créer le dossier du sujet s'il n'existe pas.
 3. Copier le template :
    ```bash
