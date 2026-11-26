@@ -1,10 +1,7 @@
 import datetime as dt
-import re
-from pathlib import Path
 
 import pytest
 
-from project_index.constants import NON_PROJECT_DIRS
 from project_index.metadata import ProjectMetadata, ProjectPath
 from project_index.rules import (
     default_tag,
@@ -86,12 +83,6 @@ def test_all_problems_are_reported_together():
 )
 def test_project_of_readme(file, project):
     assert project_of_readme(file) == project
-
-
-def test_non_project_dirs_match_check_structure_script():
-    script = (Path(__file__).parents[2] / "scripts" / "check-structure.sh").read_text()
-    pattern = re.search(r"grep -vE '\^\(([^)]*)\)/'", script).group(1)
-    assert {name.replace("\\", "") for name in pattern.split("|")} == NON_PROJECT_DIRS
 
 
 def test_default_tag():

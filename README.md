@@ -48,7 +48,7 @@ ia/
 - **Chaque projet appartient à son auteur** (`.github/CODEOWNERS`) : une PR qui touche le projet de quelqu'un d'autre attend son approbation.
 - **La CI vérifie la structure** : nommage, README présent, ligne CODEOWNERS, aucun `.env` commité, aucun fichier de plus de 10 Mo. Elle valide aussi le bloc de métadonnées quand il est présent. Pour la lancer en local :
   ```bash
-  .github/scripts/check-structure.sh
+  uv run --directory .github/project-index python -m project_index structure
   uv run --directory .github/project-index python -m project_index check
   ```
 

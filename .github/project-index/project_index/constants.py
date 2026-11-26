@@ -18,8 +18,7 @@ KNOWN_KEYS = frozenset(
 SESSION_PREFIX = "https://"
 PLACEHOLDER_PATTERN = r"<[^<>]*>"
 
-# Top-level folders that hold the repo tooling, not projects. check-structure.sh, a shell
-# script the CI runs first, keeps its own copy of this list; tests/test_rules.py checks they agree.
+# Top-level folders that hold the repo tooling, not projects: the only definition of this list.
 NON_PROJECT_DIRS = frozenset({".claude", ".github", "_template"})
 README_NAME = "README.md"
 PROJECT_DEPTH = 3  # <theme>/<sujet>/<projet>
