@@ -14,3 +14,9 @@ Monorepo of independent projects by guild members, laid out as `<theme>/<sujet>/
 ## Repo-level files
 
 `README.md`, `CLAUDE.md`, `_template/` and the root `.gitignore` define the standard for everyone. Change them only when the request is about the standard itself.
+
+## Dev workflow
+
+- Checks: the commands of `.github/workflows/checks.yml`, run from the repo root.
+- Quality gates: from the root of the changed project (the folder with `pyproject.toml` or `package.json`), `uv run --script <dev-workflow>/skills/ub-mode/scripts/quality.py --base origin/<target branch> --tests <path of the project tests>`.
+- Worktrees: `.claude/worktrees/`
