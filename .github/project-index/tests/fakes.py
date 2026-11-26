@@ -1,7 +1,7 @@
 """Fakes of the ports, for the domain and entry point tests."""
 
 from project_index.metadata import FrontMatter, NoBlock
-from project_index.ports import RepoUnavailable
+from project_index.ports import RepoUnavailable, SiteUnwritable
 
 
 class FakeRepo:
@@ -25,3 +25,20 @@ class BrokenRepo:
 
     def front_matter(self, file: str) -> FrontMatter:
         raise AssertionError("never read")
+
+
+class FakeSite:
+    """A site that keeps what it was asked to publish."""
+
+    def __init__(self) -> None:
+        self.published = None
+
+    def publish(self, projects) -> None:
+        self.published = projects
+
+
+class BrokenSite:
+    """A site that cannot be written."""
+
+    def publish(self, projects) -> None:
+        raise SiteUnwritable("cannot write the site to out: denied")

@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from project_index.metadata import FrontMatter
+from project_index.metadata import FrontMatter, IndexedProject
 
 
 class RepoUnavailable(Exception):
@@ -18,4 +18,16 @@ class RepoFiles(Protocol):
 
     def front_matter(self, file: str) -> FrontMatter:
         """Return the metadata block at the top of a file; a file that cannot be read gives a MalformedBlock."""
+        ...
+
+
+class SiteUnwritable(Exception):
+    """The index site could not be written where it was asked to go."""
+
+
+class IndexSite(Protocol):
+    """The published index of the projects."""
+
+    def publish(self, projects: list[IndexedProject]) -> None:
+        """Publish the given projects as the whole index. Raises SiteUnwritable."""
         ...

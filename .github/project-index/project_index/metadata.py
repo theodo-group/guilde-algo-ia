@@ -79,3 +79,20 @@ class CheckReport:
     def passed(self) -> bool:
         """Tell whether every metadata block present is valid."""
         return not self.invalid
+
+
+@dataclass(frozen=True)
+class Published:
+    """The index was published with the valid projects of the report."""
+
+    report: CheckReport
+
+
+@dataclass(frozen=True)
+class Blocked:
+    """Nothing was published, because some metadata blocks are invalid."""
+
+    report: CheckReport
+
+
+PublishOutcome = Published | Blocked

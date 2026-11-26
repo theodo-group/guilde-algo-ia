@@ -2,6 +2,9 @@
 
 Les projets des membres de la guilde, rangés par thème puis par sujet.
 
+- **Index des projets, avec recherche** : https://theodo-group.github.io/guilde-algo-ia/
+- **Page Notion de la guilde** : [Guilde Algo IA](https://app.notion.com/p/m33/Guilde-Algo-IA-1f1744af43ed4491948aa59646624eba)
+
 ## Structure
 
 ```
@@ -35,7 +38,7 @@ ia/
    ```bash
    cp -r _template <theme>/<sujet>/<projet>
    ```
-4. Remplir le `README.md` du projet, avec son bloc de métadonnées (optionnel).
+4. Remplir le `README.md` du projet, avec son bloc de métadonnées pour apparaître dans l'index (optionnel).
 5. Ajouter sa ligne dans `.github/CODEOWNERS` : `/<theme>/<sujet>/<projet>/ @<github-login>`.
 6. Ouvrir une PR et suivre la checklist du template.
 
@@ -51,7 +54,7 @@ ia/
 
 ## Métadonnées
 
-Optionnel. Un bloc YAML en tête du `README.md` d'un projet le décrit de façon standard. La CI le valide quand il est présent.
+Optionnel. Un bloc YAML en tête du `README.md` d'un projet le décrit de façon standard et l'ajoute à l'[index](https://theodo-group.github.io/guilde-algo-ia/). La CI le valide quand il est présent. Sans ce bloc, le projet reste dans le repo mais n'apparaît pas dans l'index.
 
 ```yaml
 ---
@@ -64,7 +67,7 @@ stack: [python, scikit-learn]               # optionnel
 ---
 ```
 
-Le thème, le sujet et le projet sont déduits du chemin du dossier. Les valeurs entre chevrons du template (`<...>`) sont refusées : remplis-les ou supprime le bloc.
+Le thème, le sujet et le projet sont déduits du chemin du dossier. L'index est reconstruit à chaque merge sur `main`. Les valeurs entre chevrons du template (`<...>`) sont refusées : remplis-les ou supprime le bloc.
 
 ## Développer sur ce repo
 
