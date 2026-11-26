@@ -36,4 +36,11 @@ SITE_DATA_FILE = "projects.json"
 SITE_MARKER_FILE = ".project-index-site"
 BUILD_COMMAND = "build"
 
+# Default tag of a project, moved to the last commit that touches its folder. Extra tags set
+# by hand add "@<label>": git cannot hold both refs a/b and a/b/c (README.md, section Tags).
+TAG_PREFIX = "projet/"
+TAGS_REMOTE = "origin"
+TAGS_BRANCH = "main"  # tags follow the history of origin/main, whatever is checked out
+TAGS_COMMAND = "tags"
+
 FORMAT_HINT = "Metadata format: README.md, section Métadonnées."

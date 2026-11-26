@@ -20,6 +20,7 @@ from project_index.constants import (
     SESSION_KEY,
     SESSION_PREFIX,
     STACK_KEY,
+    TAG_PREFIX,
     TITLE_KEY,
 )
 from project_index.metadata import ProjectMetadata, ProjectPath
@@ -34,6 +35,11 @@ def project_of_readme(file: str) -> ProjectPath | None:
     if len(parts) != PROJECT_DEPTH + 1 or parts[-1] != README_NAME or parts[0] in NON_PROJECT_DIRS:
         return None
     return ProjectPath(*parts[:PROJECT_DEPTH])
+
+
+def default_tag(project: ProjectPath) -> str:
+    """Return the tag that follows the last commit of a project folder: `projet/<theme>/<sujet>/<projet>`."""
+    return f"{TAG_PREFIX}{project}"
 
 
 def is_filled_text(value: object) -> bool:

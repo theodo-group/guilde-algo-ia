@@ -3,13 +3,13 @@ import subprocess
 import pytest
 
 from project_index.adapters.git_repo import GitRepo
-from project_index.metadata import Block, MalformedBlock, NoBlock
-from project_index.ports import RepoUnavailable
+from project_index.metadata import Block, MalformedBlock, NoBlock, ProjectPath
+from project_index.ports import RepoUnavailable, TagsUnwritable
 
 
 @pytest.fixture
 def repo(tmp_path):
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=tmp_path, check=True)
     return tmp_path
 
 
@@ -50,3 +50,104 @@ def test_outside_a_git_repo_gives_git_message(tmp_path):
 def test_current_repo_is_found(repo, monkeypatch):
     monkeypatch.chdir(repo)
     assert GitRepo.current().root.resolve() == repo.resolve()
+
+
+def commit_all(root, message):
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", message], cwd=root, check=True
+    )
+    return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True).stdout.strip()
+
+
+@pytest.fixture
+def repo_with_remote(repo, tmp_path_factory):
+    remote = tmp_path_factory.mktemp("remote")
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main"], cwd=remote, check=True)
+    subprocess.run(["git", "remote", "add", "origin", str(remote)], cwd=repo, check=True)
+    return repo, remote
+
+
+def push_main(repo):
+    subprocess.run(["git", "push", "-q", "origin", "main"], cwd=repo, check=True)
+
+
+def remote_tag(remote, tag):
+    found = subprocess.run(["git", "rev-parse", f"refs/tags/{tag}"], cwd=remote, capture_output=True, text=True)
+    return found.stdout.strip()
+
+
+def test_last_commit_reads_origin_main_not_head(repo_with_remote):
+    repo, _ = repo_with_remote
+    track(repo, {"ia/mlx/a/README.md": "# A\n"})
+    pushed = commit_all(repo, "a")
+    push_main(repo)
+    track(repo, {"ia/mlx/a/README.md": "# A local\n"})
+    commit_all(repo, "a, not pushed")
+    assert GitRepo(repo).last_commit(ProjectPath("ia", "mlx", "a")) == pushed
+
+
+def test_shallow_clone_is_refused(repo_with_remote, tmp_path_factory):
+    repo, remote = repo_with_remote
+    track(repo, {"ia/mlx/a/README.md": "# A\n"})
+    commit_all(repo, "a")
+    track(repo, {"ia/mlx/b/README.md": "# B\n"})
+    commit_all(repo, "b")
+    push_main(repo)
+    clone = tmp_path_factory.mktemp("clone") / "repo"
+    subprocess.run(["git", "clone", "-q", "--depth", "1", f"file://{remote}", str(clone)], check=True)
+    with pytest.raises(TagsUnwritable, match="shallow"):
+        GitRepo(clone).last_commit(ProjectPath("ia", "mlx", "a"))
+
+
+def test_tagged_commit_reads_the_remote_tag(repo_with_remote):
+    repo, _ = repo_with_remote
+    track(repo, {"ia/mlx/a/README.md": "# A\n"})
+    first = commit_all(repo, "a")
+    push_main(repo)
+    subprocess.run(["git", "tag", "projet/ia/mlx/a", first], cwd=repo, check=True)
+    assert GitRepo(repo).tagged_commit("projet/ia/mlx/a") is None
+
+
+def test_move_tag_points_and_pushes(repo_with_remote):
+    repo, remote = repo_with_remote
+    track(repo, {"ia/mlx/a/README.md": "# A\n"})
+    first = commit_all(repo, "a")
+    push_main(repo)
+    git = GitRepo(repo)
+    git.move_tag("projet/ia/mlx/a", first)
+    track(repo, {"ia/mlx/a/README.md": "# A2\n"})
+    second = commit_all(repo, "a2")
+    push_main(repo)
+    git.move_tag("projet/ia/mlx/a", second)
+    assert git.tagged_commit("projet/ia/mlx/a") == second
+    assert remote_tag(remote, "projet/ia/mlx/a") == second
+
+
+def test_move_tag_without_remote_is_unwritable(repo):
+    track(repo, {"ia/mlx/a/README.md": "# A\n"})
+    first = commit_all(repo, "a")
+    with pytest.raises(TagsUnwritable):
+        GitRepo(repo).move_tag("projet/ia/mlx/a", first)
+
+
+def test_project_without_commit_on_main_is_unwritable(repo_with_remote):
+    repo, _ = repo_with_remote
+    track(repo, {"README.md": "# root\n"})
+    commit_all(repo, "root")
+    push_main(repo)
+    with pytest.raises(TagsUnwritable, match="no commit of origin/main touches"):
+        GitRepo(repo).last_commit(ProjectPath("ia", "mlx", "a"))
+
+
+def test_tagged_commit_peels_an_annotated_tag(repo_with_remote):
+    repo, _ = repo_with_remote
+    track(repo, {"ia/mlx/a/README.md": "# A\n"})
+    first = commit_all(repo, "a")
+    push_main(repo)
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "tag", "-a", "-m", "note", "projet/ia/mlx/a", first],
+        cwd=repo, check=True,
+    )
+    subprocess.run(["git", "push", "-q", "origin", "refs/tags/projet/ia/mlx/a"], cwd=repo, check=True)
+    assert GitRepo(repo).tagged_commit("projet/ia/mlx/a") == first

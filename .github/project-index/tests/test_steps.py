@@ -6,8 +6,8 @@ from project_index.metadata import (
     ProjectPath,
     Published,
 )
-from project_index.steps import check_projects, publish_index
-from tests.fakes import FakeRepo, FakeSite
+from project_index.steps import check_projects, publish_index, sync_project_tags
+from tests.fakes import BrokenTags, FakeRepo, FakeSite, FakeTags
 
 VALID = Block({"titre": "T", "auteurs": ["a"], "description": "D"})
 
@@ -53,3 +53,37 @@ def test_publish_index_is_blocked_by_an_invalid_block():
     outcome = publish_index(FakeRepo({"ia/mlx/ok/README.md": VALID, "ia/mlx/bad/README.md": Block({})}), site)
     assert isinstance(outcome, Blocked)
     assert site.published is None
+
+
+PROJECTS = FakeRepo({"ia/mlx/a/README.md": NoBlock(), "ia/mlx/b/README.md": VALID, "ia/mlx/b/src/x.py": NoBlock()})
+
+
+def test_sync_moves_missing_and_stale_tags_only():
+    tags = FakeTags({"ia/mlx/a": "c1", "ia/mlx/b": "c2"}, {"projet/ia/mlx/a": "c1", "projet/ia/mlx/b": "old"})
+    sync = sync_project_tags(PROJECTS, tags)
+    assert tags.moves == [("projet/ia/mlx/b", "c2")]
+    assert sync.up_to_date == ["projet/ia/mlx/a"]
+
+
+def test_sync_is_a_no_op_when_run_twice():
+    tags = FakeTags({"ia/mlx/a": "c1", "ia/mlx/b": "c2"})
+    sync_project_tags(PROJECTS, tags)
+    second = sync_project_tags(PROJECTS, tags)
+    assert second.moved == []
+    assert len(tags.moves) == 2
+
+
+def test_sync_records_a_failed_tag_and_moves_the_others():
+    tags = BrokenTags({"ia/mlx/a": "c1", "ia/mlx/b": "c2"}, failing={"projet/ia/mlx/a"})
+    sync = sync_project_tags(PROJECTS, tags)
+    assert [(f.tag, f.reason) for f in sync.failed] == [("projet/ia/mlx/a", "remote rejected")]
+    assert [m.tag for m in sync.moved] == ["projet/ia/mlx/b"]
+    assert not sync.complete
+
+
+def test_rerun_after_a_failed_push_moves_the_stale_tag():
+    tags = BrokenTags({"ia/mlx/a": "c1", "ia/mlx/b": "c2"}, failing={"projet/ia/mlx/a"})
+    sync_project_tags(PROJECTS, tags)
+    rerun = sync_project_tags(PROJECTS, tags)
+    assert [m.tag for m in rerun.moved] == ["projet/ia/mlx/a"]
+    assert rerun.complete

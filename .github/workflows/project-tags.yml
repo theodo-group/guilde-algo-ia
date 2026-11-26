@@ -1,0 +1,26 @@
+name: project-tags
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: project-tags
+  cancel-in-progress: false
+
+jobs:
+  tags:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@v10.4.0
+      - run: uv run --locked --directory .github/project-index python -m project_index tags
