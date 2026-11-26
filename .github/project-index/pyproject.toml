@@ -1,0 +1,13 @@
+[project]
+name = "project-index"
+version = "0.1.0"
+description = "Validates the optional metadata block of each project README."
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
