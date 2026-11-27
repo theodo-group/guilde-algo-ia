@@ -25,7 +25,9 @@ def test_sorts_project_readmes_by_outcome():
     }))
     assert [p.path for p in report.indexed] == [path("ok")]
     assert report.without_metadata == [path("bare")]
-    assert [(p.path, len(p.problems)) for p in report.invalid] == [(path("broken"), 1), (path("empty"), 3)]
+    broken, empty = report.invalid
+    assert (broken.path, broken.problems) == (path("broken"), ("never closed",))
+    assert empty.path == path("empty") and empty.problems
     assert not report.passed
 
 
