@@ -18,15 +18,24 @@ KNOWN_KEYS = frozenset(
 SESSION_PREFIX = "https://"
 PLACEHOLDER_PATTERN = r"<[^<>]*>"
 
-# Top-level folders that hold the repo tooling, not projects. check-structure.sh, a shell
-# script the CI runs first, keeps its own copy of this list; tests/test_rules.py checks they agree.
+# Top-level folders that hold the repo tooling, not projects: the only definition of this list.
 NON_PROJECT_DIRS = frozenset({".claude", ".github", "_template"})
 README_NAME = "README.md"
 PROJECT_DEPTH = 3  # <theme>/<sujet>/<projet>
 FRONT_MATTER_FENCE = "---"
 BYTE_ORDER_MARK = "\ufeff"
 
+# Repo standard checked by the `structure` command (README.md, section Conventions).
+PROJECT_NAME_PATTERN = r"[a-z0-9]+(-[a-z0-9]+)*"  # kebab-case
+SECRET_FILE_NAME = ".env"  # also .env.<anything>, except the example below
+SECRET_EXAMPLE_NAME = ".env.example"
+BYTES_PER_MB = 1024 * 1024
+MAX_FILE_MB = 10
+CODEOWNERS_FILE = ".github/CODEOWNERS"
+STRUCTURE_HINT = "Rules: README.md, section Conventions."
+
 CHECK_COMMAND = "check"
+STRUCTURE_COMMAND = "structure"
 ANNOTATION_PREFIX = "::error::"  # GitHub Actions error annotation
 
 SITE_TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "site"  # .github/project-index/site/
@@ -44,3 +53,6 @@ TAGS_BRANCH = "main"  # tags follow the history of origin/main, whatever is chec
 TAGS_COMMAND = "tags"
 
 FORMAT_HINT = "Metadata format: README.md, section Métadonnées."
+
+UNREADABLE_FILE_PROBLEM = "cannot read the file: commit its deletion or restore it"
+OUTSIDE_PROJECT_PROBLEM = "file outside a project, expected <theme>/<sujet>/<projet>/..."

@@ -5,16 +5,30 @@ from project_index.ports import RepoUnavailable, SiteUnwritable, TagsUnwritable
 
 
 class FakeRepo:
-    """A repo whose files and metadata blocks are given in memory."""
+    """A repo whose files, metadata blocks, file sizes and CODEOWNERS paths are given in memory."""
 
-    def __init__(self, blocks: dict[str, FrontMatter]) -> None:
+    def __init__(
+        self,
+        blocks: dict[str, FrontMatter],
+        *,
+        sizes: dict[str, int | None] | None = None,
+        owner_paths: frozenset[str] = frozenset(),
+    ) -> None:
         self.blocks = blocks
+        self.sizes = sizes or {}
+        self.owners = owner_paths
 
     def tracked_files(self) -> list[str]:
         return list(self.blocks)
 
     def front_matter(self, file: str) -> FrontMatter:
         return self.blocks.get(file, NoBlock())
+
+    def file_size(self, file: str) -> int | None:
+        return self.sizes.get(file, 0)
+
+    def owner_paths(self) -> frozenset[str]:
+        return self.owners
 
 
 class BrokenRepo:
@@ -24,6 +38,12 @@ class BrokenRepo:
         raise RepoUnavailable("fatal: not a git repository")
 
     def front_matter(self, file: str) -> FrontMatter:
+        raise AssertionError("never read")
+
+    def file_size(self, file: str) -> int | None:
+        raise AssertionError("never read")
+
+    def owner_paths(self) -> frozenset[str]:
         raise AssertionError("never read")
 
 

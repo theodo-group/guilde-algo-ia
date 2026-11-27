@@ -9,7 +9,7 @@ Monorepo of independent projects by guild members, laid out as `<theme>/<sujet>/
 - New project → copy `_template/` (`cp -r _template <theme>/<sujet>/<projet>`), fill its `README.md`, and add its owner line to `.github/CODEOWNERS`. Create the subject folder if missing, following the naming rules in `README.md`.
 - New environment variable → add it to the project's `.env.example`, name only, no value. Real values stay in `.env`.
 - The README metadata block is optional; when present it follows `README.md`, section Métadonnées, and adds the project to the GitHub Pages index.
-- Before a PR, `.github/scripts/check-structure.sh` and `uv run --directory .github/project-index python -m project_index check` pass (the CI runs both).
+- Before a PR, `uv run --directory .github/project-index python -m project_index structure` and `uv run --directory .github/project-index python -m project_index check` pass (the CI runs both).
 - Each project has a default tag `projet/<theme>/<sujet>/<projet>` that the `project-tags` workflow moves to its last commit on every push to `main`; leave it to the CI. Extra fixed tags use `projet/<theme>/<sujet>/<projet>@<label>` (format: `README.md`, section Tags).
 - Data goes in `data/`, which git ignores; the project's README says how to get it.
 

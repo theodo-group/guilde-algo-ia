@@ -1,11 +1,11 @@
-"""Git adapter: reads the tracked paths and README metadata blocks, and moves the project tags on origin."""
+"""Git adapter: reads the tracked paths, their sizes, README metadata blocks and CODEOWNERS, and moves the project tags on origin."""
 
 import subprocess
 from functools import cached_property
 from pathlib import Path
 
 from project_index.adapters.front_matter import read_front_matter
-from project_index.constants import TAGS_BRANCH, TAGS_REMOTE
+from project_index.constants import CODEOWNERS_FILE, TAGS_BRANCH, TAGS_REMOTE
 from project_index.metadata import FrontMatter, MalformedBlock, ProjectPath
 from project_index.ports import RepoUnavailable, TagsUnwritable
 
@@ -46,6 +46,30 @@ class GitRepo:
         except (OSError, UnicodeDecodeError) as error:
             return MalformedBlock(f"cannot read the README: {error}")
         return read_front_matter(text)
+
+    def file_size(self, file: str) -> int | None:
+        """Return the size in bytes of a tracked file in the working tree, or None when it cannot be read.
+
+        A symlink counts as its own size, as git stores it.
+        """
+        try:
+            return (self.root / file).lstat().st_size
+        except OSError:
+            return None
+
+    def owner_paths(self) -> frozenset[str]:
+        """Return the paths of the CODEOWNERS lines, without their leading and trailing slashes.
+
+        Comments and blank lines are skipped. A repo without CODEOWNERS owns nothing.
+        """
+        try:
+            lines = (self.root / CODEOWNERS_FILE).read_text(encoding="utf-8").splitlines()
+        except FileNotFoundError:
+            return frozenset()
+        except (OSError, UnicodeDecodeError) as error:
+            raise RepoUnavailable(f"cannot read {CODEOWNERS_FILE}: {error}") from error
+        entries = (line.split() for line in lines if not line.lstrip().startswith("#"))
+        return frozenset(fields[0].strip("/") for fields in entries if fields)
 
     def last_commit(self, project: ProjectPath) -> str:
         """Return the last commit of origin/main that touches the project folder. Raises TagsUnwritable.

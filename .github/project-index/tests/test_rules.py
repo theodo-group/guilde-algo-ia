@@ -1,12 +1,17 @@
 import datetime as dt
-import re
-from pathlib import Path
 
 import pytest
 
-from project_index.constants import NON_PROJECT_DIRS
 from project_index.metadata import ProjectMetadata, ProjectPath
-from project_index.rules import default_tag, project_of_readme, validate_metadata
+from project_index.rules import (
+    default_tag,
+    file_problems,
+    is_outside_projects,
+    project_of_file,
+    project_of_readme,
+    project_problems,
+    validate_metadata,
+)
 
 VALID = {
     "titre": "MLX vs PyTorch",
@@ -80,11 +85,82 @@ def test_project_of_readme(file, project):
     assert project_of_readme(file) == project
 
 
-def test_non_project_dirs_match_check_structure_script():
-    script = (Path(__file__).parents[2] / "scripts" / "check-structure.sh").read_text()
-    pattern = re.search(r"grep -vE '\^\(([^)]*)\)/'", script).group(1)
-    assert {name.replace("\\", "") for name in pattern.split("|")} == NON_PROJECT_DIRS
-
-
 def test_default_tag():
     assert default_tag(ProjectPath("ia", "mlx", "mlx-vs-pytorch")) == "projet/ia/mlx/mlx-vs-pytorch"
+
+
+@pytest.mark.parametrize(
+    ("file", "project"),
+    [
+        ("ia/mlx/mlx-vs-pytorch/README.md", ProjectPath("ia", "mlx", "mlx-vs-pytorch")),
+        ("ia/mlx/mlx-vs-pytorch/src/main.py", ProjectPath("ia", "mlx", "mlx-vs-pytorch")),
+        ("ia/mlx/notes.md", None),
+        ("README.md", None),
+        ("_template/a/b/README.md", None),
+        (".github/project-index/tests/fakes.py", None),
+        (".claude/skills/x/README.md", None),
+    ],
+)
+def test_project_of_file(file, project):
+    assert project_of_file(file) == project
+
+
+@pytest.mark.parametrize(
+    ("file", "outside"),
+    [
+        ("ia/notes.md", True),
+        ("ia/mlx/notes.md", True),
+        ("README.md", False),
+        ("ia/mlx/a/README.md", False),
+        (".github/scripts/x.sh", False),
+        ("_template/README.md", False),
+        (".claude/skills/x", False),
+    ],
+)
+def test_is_outside_projects(file, outside):
+    assert is_outside_projects(file) is outside
+
+
+MB = 1024 * 1024
+
+
+@pytest.mark.parametrize(
+    ("file", "size", "problems"),
+    [
+        ("ia/mlx/a/main.py", 10, []),
+        ("ia/mlx/a/.env.example", 10, []),
+        ("ia/mlx/a/.env", 10, ["secret file committed, keep it local and list its variables in .env.example"]),
+        (".env.local", 10, ["secret file committed, keep it local and list its variables in .env.example"]),
+        ("ia/mlx/a/data.bin", 10 * MB, []),
+        ("ia/mlx/a/data.bin", 12 * MB, ["12 MB, over the 10 MB limit (put data in data/, which is not versioned)"]),
+        ("ia/mlx/a/gone.txt", None, ["cannot read the file: commit its deletion or restore it"]),
+    ],
+)
+def test_file_problems(file, size, problems):
+    assert file_problems(file, size=size) == problems
+
+
+@pytest.mark.parametrize(
+    ("project", "files", "owner_paths", "problems"),
+    [
+        (ProjectPath("ia", "mlx", "a"), {"ia/mlx/a/README.md"}, {"ia/mlx/a"}, []),
+        (ProjectPath("IA", "mlx_x", "a"), {"IA/mlx_x/a/README.md"}, {"IA/mlx_x/a"}, [
+            "'IA' is not kebab-case (lowercase, digits, dashes)",
+            "'mlx_x' is not kebab-case (lowercase, digits, dashes)",
+        ]),
+        (ProjectPath("ia", "mlx", "a-"), {"ia/mlx/a-/README.md"}, {"ia/mlx/a-"}, [
+            "'a-' is not kebab-case (lowercase, digits, dashes)",
+        ]),
+        (ProjectPath("ia", "mlx", "a"), {"ia/mlx/a/src/README.md"}, {"ia/mlx/a"}, ["missing README.md"]),
+        (ProjectPath("ia", "mlx", "a"), {"ia/mlx/a/README.md"}, {"ia/mlx/b"}, [
+            "missing owner line in .github/CODEOWNERS",
+        ]),
+        (ProjectPath("ia", "mlx", "a"), {"ia/mlx/a/README.md"}, {"ia/mlx/a/**"}, []),
+        (ProjectPath("ia", "mlx", "a"), {"ia/mlx/a/README.md"}, {"ia/mlx/a/src"}, []),
+        (ProjectPath("ia", "mlx", "a"), {"ia/mlx/a/README.md"}, {"ia/mlx/ab"}, [
+            "missing owner line in .github/CODEOWNERS",
+        ]),
+    ],
+)
+def test_project_problems(project, files, owner_paths, problems):
+    assert project_problems(project, files=frozenset(files), owner_paths=frozenset(owner_paths)) == problems

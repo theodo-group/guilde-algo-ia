@@ -1,4 +1,4 @@
-"""Run the command line: `python -m project_index check` or `python -m project_index build --out <folder>`."""
+"""Run the command line: `python -m project_index structure`, `check`, `build --out <folder>` or `tags`."""
 
 from project_index.cli import main
 

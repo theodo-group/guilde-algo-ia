@@ -34,7 +34,7 @@ def test_failing_check_prints_one_annotation_per_problem(capsys):
 def test_unlistable_repo_fails_with_git_message(capsys):
     code, out = run(capsys, BrokenRepo())
     assert code == 1
-    assert out.err.strip() == "::error::cannot list the repo files: fatal: not a git repository"
+    assert out.err.strip() == "::error::cannot read the repo: fatal: not a git repository"
 
 
 def test_unknown_command_is_refused():
@@ -90,3 +90,24 @@ def test_tags_fails_when_a_tag_cannot_be_pushed(capsys):
         "::error::projet/ia/mlx/a: remote rejected",
         "0 tag(s) moved, 0 already up to date, 1 failed",
     ]
+
+
+def test_structure_ok(capsys):
+    repo = FakeRepo({"ia/mlx/ok/README.md": NoBlock()}, owner_paths=frozenset({"ia/mlx/ok"}))
+    assert main(["structure"], repo_factory=lambda: repo) == 0
+    assert capsys.readouterr().out.splitlines() == ["Structure OK"]
+
+
+def test_structure_prints_one_annotation_per_problem(capsys):
+    repo = FakeRepo({"ia/mlx/ok/README.md": NoBlock(), "ia/notes.md": NoBlock()})
+    assert main(["structure"], repo_factory=lambda: repo) == 1
+    assert capsys.readouterr().out.splitlines() == [
+        "::error::ia/mlx/ok: missing owner line in .github/CODEOWNERS",
+        "::error::ia/notes.md: file outside a project, expected <theme>/<sujet>/<projet>/...",
+        "2 problem(s) found. Rules: README.md, section Conventions.",
+    ]
+
+
+def test_structure_on_unlistable_repo_fails(capsys):
+    assert main(["structure"], repo_factory=BrokenRepo) == 1
+    assert capsys.readouterr().err.strip() == "::error::cannot read the repo: fatal: not a git repository"

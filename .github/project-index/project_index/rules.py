@@ -1,4 +1,4 @@
-"""Domain rules of the project index: which files are project READMEs, and what a valid block holds."""
+"""Domain rules of the project index: what a project is, the repo standard, and what a valid block holds."""
 
 import datetime as dt
 import re
@@ -7,34 +7,109 @@ from pathlib import PurePosixPath
 
 from project_index.constants import (
     AUTHORS_KEY,
+    BYTES_PER_MB,
+    CODEOWNERS_FILE,
     DATE_KEY,
     DESCRIPTION_KEY,
     KNOWN_KEYS,
+    MAX_FILE_MB,
     NON_PROJECT_DIRS,
     OPTIONAL_LIST_KEYS,
+    OUTSIDE_PROJECT_PROBLEM,
     PLACEHOLDER_PATTERN,
     PROJECT_DEPTH,
+    PROJECT_NAME_PATTERN,
     README_NAME,
     REQUIRED_LIST_KEYS,
     REQUIRED_TEXT_KEYS,
+    SECRET_EXAMPLE_NAME,
+    SECRET_FILE_NAME,
     SESSION_KEY,
     SESSION_PREFIX,
     STACK_KEY,
     TAG_PREFIX,
     TITLE_KEY,
+    UNREADABLE_FILE_PROBLEM,
 )
 from project_index.metadata import ProjectMetadata, ProjectPath
+
+
+def is_tooling_file(file: str) -> bool:
+    """Tell whether a repo file sits in a tooling folder (`.claude`, `.github`, `_template`), which holds no project."""
+    return PurePosixPath(file).parts[0] in NON_PROJECT_DIRS
+
+
+def project_of_file(file: str) -> ProjectPath | None:
+    """Return the project that holds the given repo file, or None for a file outside any project.
+
+    A project is a folder at `<theme>/<sujet>/<projet>/`, outside the tooling folders.
+    """
+    parts = PurePosixPath(file).parts
+    if len(parts) <= PROJECT_DEPTH or is_tooling_file(file):
+        return None
+    return ProjectPath(*parts[:PROJECT_DEPTH])
 
 
 def project_of_readme(file: str) -> ProjectPath | None:
     """Return the project whose README the given repo file is, or None for any other file.
 
-    A project README sits at `<theme>/<sujet>/<projet>/README.md`, outside the tooling folders.
+    A project README sits at `<theme>/<sujet>/<projet>/README.md`.
     """
-    parts = PurePosixPath(file).parts
-    if len(parts) != PROJECT_DEPTH + 1 or parts[-1] != README_NAME or parts[0] in NON_PROJECT_DIRS:
+    project = project_of_file(file)
+    if project is None or file != f"{project}/{README_NAME}":
         return None
-    return ProjectPath(*parts[:PROJECT_DEPTH])
+    return project
+
+
+def is_outside_projects(file: str) -> bool:
+    """Tell whether a file sits directly in a theme or subject folder, where only project folders belong."""
+    return 1 < len(PurePosixPath(file).parts) <= PROJECT_DEPTH and not is_tooling_file(file)
+
+
+def outside_project_problems(file: str) -> list[str]:
+    """Return the problem of a file that sits in a theme or subject folder instead of a project folder."""
+    return [OUTSIDE_PROJECT_PROBLEM] if is_outside_projects(file) else []
+
+
+def is_secret_file(file: str) -> bool:
+    """Tell whether a file holds local secrets: `.env` or `.env.<name>`, except the `.env.example` template."""
+    name = PurePosixPath(file).name
+    return name == SECRET_FILE_NAME or (name.startswith(f"{SECRET_FILE_NAME}.") and name != SECRET_EXAMPLE_NAME)
+
+
+def file_problems(file: str, *, size: int | None) -> list[str]:
+    """Return the problems of a tracked file: a committed secret, over the size limit, or unreadable.
+
+    `size` is in bytes, or None when the file cannot be read (for example deleted but not committed).
+    """
+    problems = []
+    if is_secret_file(file):
+        problems.append(f"secret file committed, keep it local and list its variables in {SECRET_EXAMPLE_NAME}")
+    if size is None:
+        problems.append(UNREADABLE_FILE_PROBLEM)
+    elif size > MAX_FILE_MB * BYTES_PER_MB:
+        problems.append(
+            f"{size // BYTES_PER_MB} MB, over the {MAX_FILE_MB} MB limit (put data in data/, which is not versioned)"
+        )
+    return problems
+
+
+def project_problems(project: ProjectPath, *, files: frozenset[str], owner_paths: frozenset[str]) -> list[str]:
+    """Return the problems of a project folder.
+
+    Each part of its path must be kebab-case, its README must be among the tracked `files`,
+    and one of the CODEOWNERS `owner_paths` must be its folder or a path below it.
+    """
+    problems = [
+        f"'{part}' is not kebab-case (lowercase, digits, dashes)"
+        for part in (project.theme, project.sujet, project.projet)
+        if not re.fullmatch(PROJECT_NAME_PATTERN, part)
+    ]
+    if f"{project}/{README_NAME}" not in files:
+        problems.append(f"missing {README_NAME}")
+    if not any(path == str(project) or path.startswith(f"{project}/") for path in owner_paths):
+        problems.append(f"missing owner line in {CODEOWNERS_FILE}")
+    return problems
 
 
 def default_tag(project: ProjectPath) -> str:
