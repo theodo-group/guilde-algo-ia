@@ -1,0 +1,7 @@
+{
+  "name": "project-index",
+  "private": true,
+  "dependencies": {
+    "fzf": "0.5.2"
+  }
+}

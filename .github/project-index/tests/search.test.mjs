@@ -1,7 +1,23 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { after, test } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { search } from "../site/search.js";
+// site/search.js imports ./vendor/fzf/fzf.es.js, which the build copies from node_modules
+// (`npm ci`): lay out the same two files in a temporary folder and import search.js from there.
+const root = fileURLToPath(new URL("..", import.meta.url));
+const fzf = join(root, "node_modules", "fzf", "dist", "fzf.es.js");
+if (!existsSync(fzf)) {
+  throw new Error(`${fzf} is missing: run \`npm ci\` in .github/project-index; if it is installed, the fzf package layout changed`);
+}
+const site = mkdtempSync(join(tmpdir(), "project-index-"));
+after(() => rmSync(site, { recursive: true, force: true }));
+mkdirSync(join(site, "vendor", "fzf"), { recursive: true });
+cpSync(join(root, "site", "search.js"), join(site, "search.js"));
+cpSync(fzf, join(site, "vendor", "fzf", "fzf.es.js"));
+const { search } = await import(pathToFileURL(join(site, "search.js")).href);
 
 const dijkstra = {
   theme: "algo", sujet: "graphes", projet: "dijkstra-astar", titre: "Dijkstra et A*",
